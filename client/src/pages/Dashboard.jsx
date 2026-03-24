@@ -24,7 +24,7 @@ const Dashboard = () => {
       ])
 
       setBookings(bookingsResponse.data.bookings || [])
-      setRides(ridesResponse.data || [])
+      setRides(ridesResponse.data?.rides || ridesResponse.data || [])
       setError('')
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load dashboard')
