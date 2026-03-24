@@ -1,0 +1,28 @@
+.navbar {
+  height: 60px;
+  background: #111827;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.logo {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.nav-links button {
+  margin-left: 12px;
+  padding: 6px 14px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.nav-links .logout {
+  background: #dc2626;
+}

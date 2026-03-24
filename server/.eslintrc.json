@@ -1,0 +1,29 @@
+{
+  "env": {
+    "node": true,
+    "es2021": true
+  },
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
+  "rules": {
+    "indent": ["warn", 2],
+    "linebreak-style": ["error", "unix"],
+    "quotes": ["warn", "double"],
+    "semi": ["error", ";"],
+    "no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ],
+    "no-console": ["warn", { "allow": ["warn", "error", "log"] }],
+    "eqeqeq": ["error", "always"],
+    "curly": ["error", "all"],
+    "no-var": "error",
+    "prefer-const": "warn",
+    "prefer-arrow-callback": "warn"
+  }
+}
