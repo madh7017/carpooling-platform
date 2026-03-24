@@ -42,7 +42,7 @@ const Navbar = () => {
         })
 
         if (!isMounted) return
-        setOpenSupportCount(response.data?.stats?.unreadSupportRequests || 0)
+        setOpenSupportCount(response.data?.stats?.unreadSupportRequests || response.data?.stats?.openSupportRequests || 0)
       } catch {
         if (!isMounted) return
         setOpenSupportCount(0)

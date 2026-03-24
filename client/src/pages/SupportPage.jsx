@@ -63,7 +63,7 @@ const SupportPage = () => {
         }
       })
 
-      ;(rideResponse.data.rides || []).forEach((ride) => {
+      ;(rideResponse.data?.rides || rideResponse.data || []).forEach((ride) => {
         const rideId = ride._id || ride.id
         if (rideId) {
           options.set(rideId, buildRideOption(ride, 'created'))

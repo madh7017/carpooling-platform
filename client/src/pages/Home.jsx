@@ -428,7 +428,7 @@ const Home = () => {
             )[0] || null
 
         const nextRide =
-          (ridesResponse.data || [])
+          (ridesResponse.data?.rides || ridesResponse.data || [])
             .filter((ride) => ride.status === 'active')
             .filter((ride) => toTimestamp(ride.departureDate, ride.departureTime) >= now)
             .sort(

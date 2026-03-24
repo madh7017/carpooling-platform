@@ -18,12 +18,20 @@ export const getApiUrl = (path = '') => {
   return `${API_BASE_URL.replace(/\/+$/, '')}${normalizedPath}`;
 };
 
+const normalizeApiPath = (url) => {
+  if (!url || /^https?:\/\//i.test(url)) return url;
+  if (url.startsWith('/api/')) return url.slice(4);
+  if (url === '/api') return '/';
+  return url;
+};
+
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.timeout = 10000;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 axios.interceptors.request.use(
   (config) => {
+    config.url = normalizeApiPath(config.url);
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -61,6 +69,7 @@ const api = axios.create({
 // Request interceptor - add auth token
 api.interceptors.request.use(
   (config) => {
+    config.url = normalizeApiPath(config.url);
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
