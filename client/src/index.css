@@ -14,6 +14,9 @@
   --brand-strong: #0b49b1;
   --accent: #00a886;
   --danger: #d64545;
+  --motion-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-snappy: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --motion-soft: 260ms var(--motion-spring);
 }
 
 * {
@@ -77,6 +80,7 @@ body {
 
   .btn {
     @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 font-semibold transition-all duration-200 ease-out;
+    transform-origin: center;
   }
 
   .btn:focus-visible {
@@ -85,6 +89,7 @@ body {
 
   .btn-primary {
     @apply btn border border-blue-700 bg-gradient-to-b from-blue-600 to-blue-700 text-white shadow-sm hover:-translate-y-0.5 hover:from-blue-700 hover:to-blue-800 hover:shadow;
+    box-shadow: 0 10px 20px -14px rgba(21, 101, 216, 0.85);
   }
 
   .btn-secondary {
@@ -109,6 +114,8 @@ body {
 
   .card {
     @apply rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all;
+    transition-duration: 260ms;
+    transition-timing-function: var(--motion-spring);
   }
 
   .card-hover {
@@ -117,6 +124,7 @@ body {
 
   .card-compact {
     @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm;
+    transition: transform var(--motion-soft), box-shadow var(--motion-soft), border-color var(--motion-soft);
   }
 
   .badge {
@@ -141,6 +149,8 @@ body {
 
   .input-field {
     @apply w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 transition-all placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100;
+    transition-duration: 220ms;
+    transition-timing-function: var(--motion-spring);
   }
 
   .input-field:disabled {
@@ -165,6 +175,7 @@ body {
 
   .alert {
     @apply flex items-start gap-3 rounded-xl border px-4 py-3;
+    animation: toastIn 260ms var(--motion-spring);
   }
 
   .alert-success {
@@ -199,12 +210,13 @@ a.btn,
 .btn-outline,
 .btn-danger {
   transition:
-    transform 180ms ease-out,
-    box-shadow 180ms ease-out,
-    background-color 180ms ease-out,
-    border-color 180ms ease-out,
-    color 180ms ease-out,
-    opacity 180ms ease-out;
+    transform 180ms var(--motion-spring),
+    box-shadow 220ms var(--motion-spring),
+    background-color 180ms var(--motion-spring),
+    border-color 180ms var(--motion-spring),
+    color 180ms var(--motion-spring),
+    opacity 180ms var(--motion-spring),
+    filter 180ms var(--motion-spring);
 }
 
 button:hover,
@@ -214,6 +226,7 @@ a.btn:hover,
 .btn-outline:hover,
 .btn-danger:hover {
   transform: translateY(-1px);
+  filter: saturate(1.04);
 }
 
 button:active,
@@ -227,6 +240,7 @@ a.btn:active,
 
 .app-shell {
   min-height: 100vh;
+  isolation: isolate;
 }
 
 .app-shell::before {
@@ -251,8 +265,108 @@ a.btn:active,
   }
 }
 
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(6px);
+  }
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .animate-slide-up {
   animation: slideUp 220ms ease-out;
+}
+
+.motion-page {
+  animation: pageIn 340ms var(--motion-spring);
+  will-change: transform, opacity;
+}
+
+.modal-backdrop {
+  animation: overlayIn 220ms ease-out;
+}
+
+.modal-panel {
+  animation: panelIn 280ms var(--motion-spring);
+}
+
+.toast-card {
+  animation: toastIn 240ms var(--motion-snappy);
+}
+
+.interactive-surface {
+  transition:
+    transform 220ms var(--motion-spring),
+    box-shadow 260ms var(--motion-spring),
+    border-color 220ms var(--motion-spring),
+    background-color 220ms var(--motion-spring);
+}
+
+.interactive-surface:hover {
+  transform: translateY(-2px);
+}
+
+.interactive-surface:active {
+  transform: translateY(0) scale(0.985);
+}
+
+.card:hover,
+.card-compact:hover {
+  box-shadow: 0 18px 38px -28px rgba(16, 33, 62, 0.45);
+}
+
+.input-field:hover,
+.select-field:hover,
+.textarea-field:hover {
+  border-color: rgba(59, 130, 246, 0.36);
+}
+
+.input-field:focus,
+.select-field:focus,
+.textarea-field:focus {
+  transform: translateY(-1px);
+}
+
+.btn:disabled,
+button:disabled {
+  transform: none !important;
+  filter: grayscale(0.02);
 }
 
 @media (max-width: 640px) {
@@ -266,5 +380,16 @@ a.btn:active,
 
   .heading-3 {
     @apply text-xl;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

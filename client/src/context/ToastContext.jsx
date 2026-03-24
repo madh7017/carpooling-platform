@@ -77,8 +77,8 @@ export const ToastProvider = ({ children }) => {
     <ToastContext.Provider value={value}>
       {children}
       {confirmDialog && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/40 px-4">
-          <div className="w-full max-w-md animate-slide-up rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+        <div className="modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/40 px-4">
+          <div className="modal-panel w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
             <h2 className="text-xl font-bold text-slate-900">{confirmDialog.title}</h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">{confirmDialog.message}</p>
 
@@ -112,7 +112,7 @@ export const ToastProvider = ({ children }) => {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto animate-slide-up rounded-2xl border px-4 py-3 shadow-xl ${
+            className={`toast-card pointer-events-auto rounded-2xl border px-4 py-3 shadow-xl ${
               toast.type === 'success'
                 ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
                 : toast.type === 'danger'
@@ -143,8 +143,8 @@ const PromptModal = ({ dialog, onCancel, onConfirm }) => {
   const [value, setValue] = useState(dialog.initialValue || '')
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/40 px-4">
-      <div className="w-full max-w-lg animate-slide-up rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+    <div className="modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/40 px-4">
+      <div className="modal-panel w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
         <h2 className="text-xl font-bold text-slate-900">{dialog.title}</h2>
         <p className="mt-3 text-sm leading-6 text-slate-600">{dialog.message}</p>
 

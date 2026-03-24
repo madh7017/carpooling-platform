@@ -7,7 +7,7 @@ const Alert = ({ type = 'info', title, message, onClose }) => {
   }
 
   return (
-    <div className={`alert alert-${type} animate-slide-up`} role="alert">
+    <div className={`alert alert-${type}`} role="alert">
       <span className="grid h-6 w-6 place-content-center rounded-full bg-white/70 text-xs font-bold">{icons[type]}</span>
       <div className="flex-1">
         {title && <p className="font-semibold">{title}</p>}
