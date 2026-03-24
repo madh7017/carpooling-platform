@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
-import { useAuth } from '@context/AuthContext'
 import Loading from '@components/Loading'
 import { getApiUrl } from '@api/api'
 import { formatINR, formatTime12Hour } from '@utils/formatters'
@@ -15,7 +14,6 @@ const getTodayDateString = () => {
 }
 
 const SearchRides = () => {
-  const { user } = useAuth()
   const placeSuggestions = [
     'Bengaluru',
     'Mysuru',
@@ -46,7 +44,7 @@ const SearchRides = () => {
   const [rides, setRides] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [sortBy, setSortBy] = useState('price')
+  const [sortBy] = useState('price')
   const [page, setPage] = useState(1)
   const sameRouteMessage = 'Choose different cities'
   const minSearchDate = getTodayDateString()
@@ -97,8 +95,8 @@ const SearchRides = () => {
     setPage(1)
   }
 
-  const handleSearch = async (e) => {
-    e.preventDefault()
+  const handleSearch = useCallback(async (e) => {
+    e?.preventDefault?.()
     setError('')
 
     if (hasSameRoute(filters.from, filters.to)) {
@@ -127,11 +125,11 @@ const SearchRides = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters, page, sortBy])
 
   useEffect(() => {
-    handleSearch({ preventDefault: () => {} })
-  }, [])
+    handleSearch()
+  }, [handleSearch])
 
   useEffect(() => {
     const token = localStorage.getItem('token')

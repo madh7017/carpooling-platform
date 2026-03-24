@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import { useToast } from '@context/ToastContext'
 import Loading from '@components/Loading'
@@ -44,7 +44,7 @@ const SupportPage = () => {
     }
   }
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       setLoading(true)
       const [requestResponse, bookingResponse, rideResponse] = await Promise.all([
@@ -77,11 +77,11 @@ const SupportPage = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [headers])
 
   useEffect(() => {
     fetchRequests()
-  }, [])
+  }, [fetchRequests])
 
   const handleSubmit = async (event) => {
     event.preventDefault()

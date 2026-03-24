@@ -31,26 +31,6 @@ const convert12HourTo24Hour = (hour, minute, meridiem) => {
   return `${String(nextHour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 };
 
-const convert24HourTo12Hour = (time) => {
-  if (!time) {
-    return { hour: "", minute: "", meridiem: "AM" };
-  }
-
-  const [hoursText, minutesText] = time.split(":");
-  const hours = Number(hoursText);
-  const minutes = Number(minutesText);
-
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-    return { hour: "", minute: "", meridiem: "AM" };
-  }
-
-  return {
-    hour: String(hours % 12 || 12),
-    minute: String(minutes).padStart(2, "0"),
-    meridiem: hours >= 12 ? "PM" : "AM",
-  };
-};
-
 const CreateRide = () => {
   const navigate = useNavigate();
   const { user } = useAuth();

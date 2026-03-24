@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '@context/AuthContext'
@@ -75,7 +75,7 @@ const AdminPage = () => {
     []
   )
 
-  const fetchAdminData = async () => {
+  const fetchAdminData = useCallback(async () => {
     try {
       setLoading(true)
       const [overviewResponse, usersResponse, ridesResponse, bookingsResponse] = await Promise.all([
@@ -95,13 +95,13 @@ const AdminPage = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [headers])
 
   useEffect(() => {
     if (user?.isAdmin) {
       fetchAdminData()
     }
-  }, [user?.isAdmin])
+  }, [fetchAdminData, user?.isAdmin])
 
   useEffect(() => {
     if (!user?.isAdmin || activeTab !== 'support') return

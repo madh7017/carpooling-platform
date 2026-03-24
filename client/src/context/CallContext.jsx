@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import axios from 'axios'
 import { useAuth } from '@context/AuthContext'
 import { useToast } from '@context/ToastContext'
@@ -30,14 +30,14 @@ export const CallProvider = ({ children }) => {
     currentCallRef.current = currentCall
   }, [currentCall])
 
-  const stopTracks = () => {
+  const stopTracks = useCallback(() => {
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop())
       localStreamRef.current = null
     }
-  }
+  }, [])
 
-  const resetPeer = () => {
+  const resetPeer = useCallback(() => {
     if (peerConnectionRef.current) {
       peerConnectionRef.current.ontrack = null
       peerConnectionRef.current.onicecandidate = null
@@ -50,13 +50,13 @@ export const CallProvider = ({ children }) => {
     if (remoteAudioRef.current) {
       remoteAudioRef.current.srcObject = null
     }
-  }
+  }, [])
 
-  const clearCallLocally = () => {
+  const clearCallLocally = useCallback(() => {
     stopTracks()
     resetPeer()
     setCurrentCall(null)
-  }
+  }, [resetPeer, stopTracks])
 
   const getMicrophoneStream = async () => {
     if (typeof window !== 'undefined' && !window.isSecureContext) {
@@ -286,7 +286,9 @@ export const CallProvider = ({ children }) => {
         if (peerConnectionRef.current?.remoteDescription) {
           try {
             await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(payload.candidate))
-          } catch {}
+          } catch {
+            remoteCandidatesRef.current.push(payload.candidate)
+          }
         } else {
           remoteCandidatesRef.current.push(payload.candidate)
         }
@@ -300,14 +302,14 @@ export const CallProvider = ({ children }) => {
     })
 
     return () => source.close()
-  }, [headers, showToast, user?.id])
+  }, [clearCallLocally, headers, showToast, user?.id])
 
   useEffect(() => {
     return () => {
       stopTracks()
       resetPeer()
     }
-  }, [])
+  }, [resetPeer, stopTracks])
 
   return (
     <CallContext.Provider
@@ -324,7 +326,7 @@ export const CallProvider = ({ children }) => {
     >
       {children}
 
-      <audio ref={remoteAudioRef} autoPlay playsInline />
+      <audio ref={remoteAudioRef} autoPlay />
 
       {currentCall && (
         <div className="fixed bottom-6 right-6 z-[70] w-[22rem] max-w-[calc(100vw-2rem)] rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-2xl">

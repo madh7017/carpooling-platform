@@ -3,8 +3,6 @@ import axios from 'axios';
 // Local development can use Vite proxy (/api). Production should use VITE_API_BASE_URL.
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
-console.log('API Base URL:', API_BASE_URL);
-
 export const getApiUrl = (path = '') => {
   if (!path) return API_BASE_URL;
   if (/^https?:\/\//i.test(path)) return path;
