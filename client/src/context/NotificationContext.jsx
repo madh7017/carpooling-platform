@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@context/AuthContext'
+import { getApiUrl } from '@api/api'
 
 const NotificationContext = createContext(null)
 const MAX_NOTIFICATIONS = 25
@@ -123,7 +124,7 @@ export const NotificationProvider = ({ children }) => {
     const token = localStorage.getItem('token')
     if (!user || !token) return undefined
 
-    const source = new EventSource(`/api/stream?token=${encodeURIComponent(token)}`)
+    const source = new EventSource(getApiUrl(`/stream?token=${encodeURIComponent(token)}`))
 
     const handleIncomingEvent = (eventType) => (event) => {
       const payload = JSON.parse(event.data)

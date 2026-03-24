@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '@context/AuthContext'
 import Loading from '@components/Loading'
+import { getApiUrl } from '@api/api'
 import { formatINR, formatTime12Hour } from '@utils/formatters'
 
 const getTodayDateString = () => {
@@ -136,7 +137,7 @@ const SearchRides = () => {
     const token = localStorage.getItem('token')
     if (!token) return undefined
 
-    const source = new EventSource(`/api/stream?token=${encodeURIComponent(token)}`)
+    const source = new EventSource(getApiUrl(`/stream?token=${encodeURIComponent(token)}`))
     source.addEventListener('ride_update', (event) => {
       const payload = JSON.parse(event.data)
       setRides((prev) => prev.filter((ride) => ride._id !== payload.rideId))

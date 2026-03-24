@@ -4,6 +4,7 @@ import { useToast } from '@context/ToastContext'
 import Loading from '@components/Loading'
 import FloatingChatBox from '@components/FloatingChatBox'
 import PrivateCallButton from '@components/PrivateCallButton'
+import { getApiUrl } from '@api/api'
 import { formatINR, formatTime12Hour } from '@utils/formatters'
 import { buildShareUrl, copyTextToClipboard, isLocalOnlyShareBaseUrl } from '@utils/share'
 
@@ -40,7 +41,7 @@ const MyBookings = () => {
     const token = localStorage.getItem('token')
     if (!token) return undefined
 
-    const source = new EventSource(`/api/stream?token=${encodeURIComponent(token)}`)
+    const source = new EventSource(getApiUrl(`/stream?token=${encodeURIComponent(token)}`))
     source.addEventListener('chat_message', (event) => {
       const payload = JSON.parse(event.data)
       setMessagesByBooking((prev) => {

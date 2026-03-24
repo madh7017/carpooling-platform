@@ -4,6 +4,7 @@ import axios from 'axios'
 import Loading from '@components/Loading'
 import FloatingChatBox from '@components/FloatingChatBox'
 import PrivateCallButton from '@components/PrivateCallButton'
+import { getApiUrl } from '@api/api'
 
 const DriverRideBookings = () => {
   const { rideId } = useParams()
@@ -49,7 +50,7 @@ const DriverRideBookings = () => {
     const token = localStorage.getItem('token')
     if (!token) return undefined
 
-    const source = new EventSource(`/api/stream?token=${encodeURIComponent(token)}`)
+    const source = new EventSource(getApiUrl(`/stream?token=${encodeURIComponent(token)}`))
     source.addEventListener('chat_message', (event) => {
       const payload = JSON.parse(event.data)
       setMessagesByBooking((prev) => {

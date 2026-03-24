@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import axios from 'axios'
 import { useAuth } from '@context/AuthContext'
 import { useToast } from '@context/ToastContext'
+import { getApiUrl } from '@api/api'
 
 const CallContext = createContext(null)
 
@@ -244,7 +245,7 @@ export const CallProvider = ({ children }) => {
     const token = localStorage.getItem('token')
     if (!user?.id || !token) return undefined
 
-    const source = new EventSource(`/api/stream?token=${encodeURIComponent(token)}`)
+    const source = new EventSource(getApiUrl(`/stream?token=${encodeURIComponent(token)}`))
 
     source.addEventListener('call_signal', async (event) => {
       const payload = JSON.parse(event.data)
