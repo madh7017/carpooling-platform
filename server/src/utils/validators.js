@@ -3,6 +3,7 @@ const placePattern = /^(?=.*[A-Za-z])[A-Za-z0-9][A-Za-z0-9\s,.'-]{2,59}$/;
 const licensePattern = /^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9\s-]{6,20}$/;
 const supportSubjectPattern = /^(?=.*[A-Za-z])[A-Za-z0-9][A-Za-z0-9\s,.'#&()/-]{4,79}$/;
 const descriptiveTextPattern = /^(?=.*[A-Za-z])[A-Za-z0-9][A-Za-z0-9\s,.'#&()!?:/-]{9,500}$/;
+const safetyNotePattern = /^(?=.*[A-Za-z])[A-Za-z0-9\s,.'#&()!?:/@+-]{2,300}$/;
 
 const normalizeVehicleNumber = (value = "") => String(value).toUpperCase().replace(/[\s-]/g, "");
 const normalizePhoneNumber = (value = "") => String(value).replace(/[^\d+]/g, "");
@@ -22,6 +23,7 @@ const isValidLicenseNumber = (value = "") => licensePattern.test(String(value).t
 const isValidVehicleNumber = (value = "") => vehiclePattern.test(normalizeVehicleNumber(value));
 const isValidSupportSubject = (value = "") => supportSubjectPattern.test(String(value).trim());
 const isValidDescriptiveText = (value = "") => descriptiveTextPattern.test(String(value).trim());
+const isValidSafetyNote = (value = "") => safetyNotePattern.test(String(value).trim());
 
 module.exports = {
   isValidName,
@@ -31,5 +33,6 @@ module.exports = {
   isValidVehicleNumber,
   isValidSupportSubject,
   isValidDescriptiveText,
+  isValidSafetyNote,
   normalizeVehicleNumber,
 };

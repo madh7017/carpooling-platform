@@ -5,7 +5,7 @@ import { useAuth } from '@context/AuthContext'
 import { useToast } from '@context/ToastContext'
 import Loading from '@components/Loading'
 import { formatINR, formatTime12Hour } from '@utils/formatters'
-import { isValidDescriptiveText, isValidName, isValidPhone } from '@utils/validators'
+import { isValidName, isValidPhone, isValidSafetyNote } from '@utils/validators'
 
 const getStatusMeta = (status) => {
   if (status === 'active') {
@@ -100,8 +100,8 @@ const RideDetail = () => {
       return
     }
 
-    if (passengerDetails.note.trim() && !isValidDescriptiveText(passengerDetails.note)) {
-      setError('Enter a meaningful safety note')
+    if (passengerDetails.note.trim() && !isValidSafetyNote(passengerDetails.note)) {
+      setError('Add a short safety note using simple text')
       return
     }
 
@@ -150,8 +150,8 @@ const RideDetail = () => {
       message = 'Enter a valid emergency contact phone'
     }
 
-    if (name === 'note' && value.trim() && !isValidDescriptiveText(value)) {
-      message = 'Enter a meaningful safety note'
+    if (name === 'note' && value.trim() && !isValidSafetyNote(value)) {
+      message = 'Add a short safety note using simple text'
     }
 
     if (message) {
@@ -281,7 +281,7 @@ const RideDetail = () => {
                 />
                 <textarea
                   className="textarea-field"
-                  placeholder="Optional safety note (medical, pickup preference, etc.)"
+                  placeholder="Optional safety note like pickup near gate, i have luggage, slow walk, asthma, etc."
                   value={passengerDetails.note}
                   onChange={(e) => setPassengerDetails((prev) => ({ ...prev, note: e.target.value }))}
                   onBlur={(e) => handlePassengerDetailBlur('note', e.target.value)}

@@ -15,7 +15,7 @@ const {
 const authMiddleware = require("../middlewares/authMiddleware");
 const { body, param } = require("express-validator");
 const { runValidation } = require("../middlewares/validationMiddleware");
-const { isValidDescriptiveText, isValidName, isValidPhone } = require("../utils/validators");
+const { isValidName, isValidPhone, isValidSafetyNote } = require("../utils/validators");
 
 router.post(
   "/",
@@ -39,8 +39,8 @@ router.post(
       .withMessage("Valid emergency contact phone required"),
     body("passengerDetails.note")
       .optional({ checkFalsy: true })
-      .custom((value) => isValidDescriptiveText(value))
-      .withMessage("Add a meaningful safety note"),
+      .custom((value) => isValidSafetyNote(value))
+      .withMessage("Add a short safety note without special symbols"),
   ],
   runValidation,
   createBooking
