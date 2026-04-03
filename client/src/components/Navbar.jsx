@@ -39,6 +39,7 @@ const Navbar = () => {
       try {
         const response = await axios.get('/api/admin/overview', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          timeout: 30000,
         })
 
         if (!isMounted) return

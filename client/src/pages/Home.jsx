@@ -363,7 +363,7 @@ const Home = () => {
       try {
         setAdminLoading(true)
         const [overviewResponse, ridesResponse] = await Promise.all([
-          axios.get('/api/admin/overview', { headers: adminHeaders }),
+          axios.get('/api/admin/overview', { headers: adminHeaders, timeout: 30000 }),
           axios.get('/api/rides/search', { params: { limit: 8, sortBy: 'date' } }),
         ])
 

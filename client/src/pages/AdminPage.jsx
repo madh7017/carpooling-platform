@@ -74,15 +74,19 @@ const AdminPage = () => {
     () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` }),
     []
   )
+  const adminRequestConfig = useMemo(
+    () => ({ headers, timeout: 30000 }),
+    [headers]
+  )
 
   const fetchAdminData = useCallback(async () => {
     try {
       setLoading(true)
       const [overviewResponse, usersResponse, ridesResponse, bookingsResponse] = await Promise.all([
-        axios.get('/api/admin/overview', { headers }),
-        axios.get('/api/admin/users', { headers }),
-        axios.get('/api/admin/rides', { headers }),
-        axios.get('/api/admin/bookings', { headers }),
+        axios.get('/api/admin/overview', adminRequestConfig),
+        axios.get('/api/admin/users', adminRequestConfig),
+        axios.get('/api/admin/rides', adminRequestConfig),
+        axios.get('/api/admin/bookings', adminRequestConfig),
       ])
 
       setOverview(overviewResponse.data.stats)
@@ -95,7 +99,7 @@ const AdminPage = () => {
     } finally {
       setLoading(false)
     }
-  }, [headers])
+  }, [adminRequestConfig])
 
   useEffect(() => {
     if (user?.isAdmin) {
@@ -110,7 +114,7 @@ const AdminPage = () => {
 
     const fetchSupportRequests = async () => {
       try {
-        const response = await axios.get('/api/admin/support', { headers })
+        const response = await axios.get('/api/admin/support', adminRequestConfig)
         if (!isMounted) return
         setSupportRequests(response.data.requests || [])
         window.dispatchEvent(new Event('support-badge-refresh'))
@@ -125,7 +129,7 @@ const AdminPage = () => {
     return () => {
       isMounted = false
     }
-  }, [activeTab, headers, showToast, user?.isAdmin])
+  }, [activeTab, adminRequestConfig, showToast, user?.isAdmin])
 
   if (!user) return null
   if (!user.isAdmin) return <Navigate to="/dashboard" replace />
@@ -145,7 +149,7 @@ const AdminPage = () => {
       await axios.patch(
         `/api/admin/users/${targetUser.id}/admin`,
         { isAdmin: !targetUser.isAdmin },
-        { headers }
+        adminRequestConfig
       )
       showToast('Admin access updated', 'success')
       fetchAdminData()
@@ -166,7 +170,7 @@ const AdminPage = () => {
     if (!confirmed) return
 
     try {
-      await axios.delete(`/api/admin/users/${targetUser.id}`, { headers })
+      await axios.delete(`/api/admin/users/${targetUser.id}`, adminRequestConfig)
       showToast('User deleted', 'success')
       fetchAdminData()
     } catch (err) {
@@ -186,7 +190,7 @@ const AdminPage = () => {
     if (!confirmed) return
 
     try {
-      await axios.patch(`/api/admin/rides/${ride.id}/cancel`, {}, { headers })
+      await axios.patch(`/api/admin/rides/${ride.id}/cancel`, {}, adminRequestConfig)
       showToast('Ride cancelled', 'success')
       fetchAdminData()
     } catch (err) {
@@ -206,7 +210,7 @@ const AdminPage = () => {
     if (!confirmed) return
 
     try {
-      await axios.patch(`/api/admin/bookings/${booking.id}/cancel`, {}, { headers })
+      await axios.patch(`/api/admin/bookings/${booking.id}/cancel`, {}, adminRequestConfig)
       showToast('Booking cancelled', 'success')
       fetchAdminData()
     } catch (err) {
@@ -235,12 +239,12 @@ const AdminPage = () => {
       await axios.patch(
         `/api/admin/support/${request.id}`,
         { status, adminNote: note ?? request.adminNote ?? '' },
-        { headers }
+        adminRequestConfig
       )
       showToast('Support request updated', 'success')
       fetchAdminData()
       if (activeTab === 'support') {
-        const response = await axios.get('/api/admin/support', { headers })
+        const response = await axios.get('/api/admin/support', adminRequestConfig)
         setSupportRequests(response.data.requests || [])
       }
       window.dispatchEvent(new Event('support-badge-refresh'))
