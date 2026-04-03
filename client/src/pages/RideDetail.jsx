@@ -4,7 +4,7 @@ import axios from 'axios'
 import { useAuth } from '@context/AuthContext'
 import { useToast } from '@context/ToastContext'
 import Loading from '@components/Loading'
-import { formatINR, formatTime12Hour } from '@utils/formatters'
+import { formatINR, formatRating, formatTime12Hour } from '@utils/formatters'
 import { isValidName, isValidPhone, isValidSafetyNote } from '@utils/validators'
 
 const getStatusMeta = (status) => {
@@ -215,7 +215,7 @@ const RideDetail = () => {
             <h3 className="text-xl font-bold mt-8 mb-4">Driver Info</h3>
             <div className="rounded-xl border border-slate-200 p-4 space-y-2">
               <p><strong>Name:</strong> {ride.driver.name}</p>
-              <p><strong>Rating:</strong> {ride.driver.rating || 'No ratings yet'}</p>
+              <p><strong>Rating:</strong> {formatRating(ride.driver?.rating, 'No ratings yet')}</p>
               <p><strong>Contact:</strong> Phone number is kept private until booking.</p>
             </div>
           </div>

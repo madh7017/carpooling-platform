@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import axios from 'axios'
 import Loading from '@components/Loading'
 import { getApiUrl } from '@api/api'
-import { formatINR, formatTime12Hour } from '@utils/formatters'
+import { formatINR, formatRating, formatTime12Hour } from '@utils/formatters'
 
 const getTodayDateString = () => {
   const today = new Date()
@@ -270,7 +270,7 @@ const SearchRides = () => {
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Rating</p>
-                  <p className="mt-1 font-medium text-slate-800">{ride.driver.rating || 'N/A'}</p>
+                  <p className="mt-1 font-medium text-slate-800">{formatRating(ride.driver?.rating)}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Seats</p>

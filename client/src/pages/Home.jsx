@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@context/AuthContext'
-import { formatDateIN, formatINR, formatTime12Hour } from '@utils/formatters'
+import { formatDateIN, formatINR, formatRating, formatTime12Hour } from '@utils/formatters'
 
 const GuestHome = () => (
   <div className="relative flex min-h-[calc(100vh-5rem)] items-center justify-center overflow-hidden px-4 py-12">
@@ -308,7 +308,7 @@ const AdminHome = ({ adminOverview, adminLoading, adminError, liveRides }) => {
                       Seats left: <span className="font-semibold text-slate-800">{ride.availableSeats}</span>
                     </p>
                     <p>
-                      Rating: <span className="font-semibold text-slate-800">{ride.driver?.rating ?? 'New'}</span>
+                      Rating: <span className="font-semibold text-slate-800">{formatRating(ride.driver?.rating, 'New')}</span>
                     </p>
                   </div>
 

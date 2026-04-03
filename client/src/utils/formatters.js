@@ -7,6 +7,13 @@ export const formatINR = (value) => {
   }).format(amount);
 };
 
+export const formatRating = (value, fallback = "N/A") => {
+  const rating = Number(value);
+  if (!Number.isFinite(rating) || rating <= 0) return fallback;
+
+  return rating.toFixed(1);
+};
+
 export const formatDateIN = (value) => {
   if (!value) return "";
   return new Date(value).toLocaleDateString("en-IN");
