@@ -6,6 +6,18 @@ const SupportRequest = require("../models/SupportRequest");
 const asyncHandler = require("../utils/asyncHandler");
 const { isAdminUser } = require("../utils/admin");
 
+const startOfDay = (date) => {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+};
+
+const endOfDay = (date) => {
+  const copy = new Date(date);
+  copy.setHours(23, 59, 59, 999);
+  return copy;
+};
+
 const formatUser = (user) => ({
   id: user._id.toString(),
   name: user.name,
@@ -19,7 +31,7 @@ const formatUser = (user) => ({
 });
 
 exports.getAdminOverview = asyncHandler(async (req, res) => {
-  const [users, rides, bookings, activeRides, activeBookings, openSupportRequests, unreadSupportRequests] = await Promise.all([
+  const [users, rides, bookings, activeRides, activeBookings, openSupportRequests, unreadSupportRequests, adminUsers, averageFareAgg] = await Promise.all([
     User.countDocuments(),
     Ride.countDocuments(),
     Booking.countDocuments(),
@@ -27,7 +39,37 @@ exports.getAdminOverview = asyncHandler(async (req, res) => {
     Booking.countDocuments({ status: "confirmed" }),
     SupportRequest.countDocuments({ status: { $ne: "resolved" } }),
     SupportRequest.countDocuments({ adminViewedAt: null }),
+    User.countDocuments({ isAdmin: true }),
+    Ride.aggregate([{ $group: { _id: null, averageFare: { $avg: "$pricePerSeat" } } }]),
   ]);
+
+  const recentDateRanges = Array.from({ length: 7 }, (_, index) => {
+    const current = new Date();
+    current.setDate(current.getDate() - (6 - index));
+    return {
+      label: current.toLocaleDateString("en-IN", { weekday: "short" }),
+      start: startOfDay(current),
+      end: endOfDay(current),
+    };
+  });
+
+  const [rideStatusAgg, bookingStatusAgg, recentRideAgg, recentBookingAgg] = await Promise.all([
+    Ride.aggregate([{ $group: { _id: "$status", value: { $sum: 1 } } }]),
+    Booking.aggregate([{ $group: { _id: "$status", value: { $sum: 1 } } }]),
+    Promise.all(
+      recentDateRanges.map((range) =>
+        Ride.countDocuments({ createdAt: { $gte: range.start, $lte: range.end } })
+      )
+    ),
+    Promise.all(
+      recentDateRanges.map((range) =>
+        Booking.countDocuments({ createdAt: { $gte: range.start, $lte: range.end } })
+      )
+    ),
+  ]);
+
+  const rideStatusCounts = Object.fromEntries(rideStatusAgg.map((item) => [item._id, item.value]));
+  const bookingStatusCounts = Object.fromEntries(bookingStatusAgg.map((item) => [item._id, item.value]));
 
   res.json({
     stats: {
@@ -39,17 +81,43 @@ exports.getAdminOverview = asyncHandler(async (req, res) => {
       openSupportRequests,
       unreadSupportRequests,
     },
+    insights: {
+      adminUsers,
+      averageFare: Math.round(averageFareAgg?.[0]?.averageFare || 0),
+      rideStatusCounts: {
+        active: rideStatusCounts.active || 0,
+        completed: rideStatusCounts.completed || 0,
+        cancelled: rideStatusCounts.cancelled || 0,
+      },
+      bookingStatusCounts: {
+        confirmed: bookingStatusCounts.confirmed || 0,
+        completed: bookingStatusCounts.completed || 0,
+        cancelled: bookingStatusCounts.cancelled || 0,
+      },
+      recentRides: recentDateRanges.map((range, index) => ({
+        label: range.label,
+        value: recentRideAgg[index] || 0,
+      })),
+      recentBookings: recentDateRanges.map((range, index) => ({
+        label: range.label,
+        value: recentBookingAgg[index] || 0,
+      })),
+    },
   });
 });
 
 exports.getAdminUsers = asyncHandler(async (req, res) => {
-  const users = await User.find().sort({ createdAt: -1 });
+  const users = await User.find()
+    .select("name email phone ecoScore rating ratingCount isAdmin createdAt")
+    .sort({ createdAt: -1 })
+    .lean();
   res.json({ users: users.map(formatUser) });
 });
 
 exports.getAdminRides = asyncHandler(async (req, res) => {
   const rides = await Ride.find()
     .populate("driver", "name email")
+    .select("source destination status dateTime pricePerSeat availableSeats estimatedDurationMinutes createdAt driver")
     .sort({ createdAt: -1 });
 
   res.json({
@@ -79,8 +147,10 @@ exports.getAdminBookings = asyncHandler(async (req, res) => {
     .populate("passenger", "name email")
     .populate({
       path: "ride",
+      select: "source destination dateTime driver",
       populate: { path: "driver", select: "name email" },
     })
+    .select("status seatsBooked passenger ride createdAt")
     .sort({ createdAt: -1 });
 
   res.json({
@@ -124,6 +194,7 @@ exports.getAdminSupportRequests = asyncHandler(async (req, res) => {
   const requests = await SupportRequest.find()
     .populate("user", "name email")
     .populate("ride")
+    .select("subject category message status adminNote adminViewedAt createdAt updatedAt ride user")
     .sort({ createdAt: -1 });
 
   res.json({

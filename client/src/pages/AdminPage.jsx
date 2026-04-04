@@ -62,6 +62,7 @@ const AdminPage = () => {
   const { user } = useAuth()
   const { showToast, confirmAction, promptAction } = useToast()
   const [overview, setOverview] = useState(null)
+  const [insights, setInsights] = useState(null)
   const [users, setUsers] = useState([])
   const [rides, setRides] = useState([])
   const [bookings, setBookings] = useState([])
@@ -79,20 +80,12 @@ const AdminPage = () => {
     [headers]
   )
 
-  const fetchAdminData = useCallback(async () => {
+  const fetchOverview = useCallback(async () => {
     try {
       setLoading(true)
-      const [overviewResponse, usersResponse, ridesResponse, bookingsResponse] = await Promise.all([
-        axios.get('/api/admin/overview', adminRequestConfig),
-        axios.get('/api/admin/users', adminRequestConfig),
-        axios.get('/api/admin/rides', adminRequestConfig),
-        axios.get('/api/admin/bookings', adminRequestConfig),
-      ])
-
+      const overviewResponse = await axios.get('/api/admin/overview', adminRequestConfig)
       setOverview(overviewResponse.data.stats)
-      setUsers(usersResponse.data.users || [])
-      setRides(ridesResponse.data.rides || [])
-      setBookings(bookingsResponse.data.bookings || [])
+      setInsights(overviewResponse.data.insights || null)
       setError('')
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load admin dashboard')
@@ -101,35 +94,75 @@ const AdminPage = () => {
     }
   }, [adminRequestConfig])
 
-  useEffect(() => {
-    if (user?.isAdmin) {
-      fetchAdminData()
-    }
-  }, [fetchAdminData, user?.isAdmin])
+  const fetchUsers = useCallback(async () => {
+    const response = await axios.get('/api/admin/users', adminRequestConfig)
+    setUsers(response.data.users || [])
+    setError('')
+  }, [adminRequestConfig])
+
+  const fetchRides = useCallback(async () => {
+    const response = await axios.get('/api/admin/rides', adminRequestConfig)
+    setRides(response.data.rides || [])
+    setError('')
+  }, [adminRequestConfig])
+
+  const fetchBookings = useCallback(async () => {
+    const response = await axios.get('/api/admin/bookings', adminRequestConfig)
+    setBookings(response.data.bookings || [])
+    setError('')
+  }, [adminRequestConfig])
+
+  const fetchSupportRequests = useCallback(async () => {
+    const response = await axios.get('/api/admin/support', adminRequestConfig)
+    setSupportRequests(response.data.requests || [])
+    setError('')
+    window.dispatchEvent(new Event('support-badge-refresh'))
+  }, [adminRequestConfig])
 
   useEffect(() => {
-    if (!user?.isAdmin || activeTab !== 'support') return
+    if (user?.isAdmin) {
+      fetchOverview()
+    }
+  }, [fetchOverview, user?.isAdmin])
+
+  useEffect(() => {
+    if (!user?.isAdmin) return
 
     let isMounted = true
 
-    const fetchSupportRequests = async () => {
+    const loadActiveTab = async () => {
       try {
-        const response = await axios.get('/api/admin/support', adminRequestConfig)
         if (!isMounted) return
-        setSupportRequests(response.data.requests || [])
-        window.dispatchEvent(new Event('support-badge-refresh'))
+
+        if (activeTab === 'users' && users.length === 0) {
+          await fetchUsers()
+        }
+
+        if (activeTab === 'rides' && rides.length === 0) {
+          await fetchRides()
+        }
+
+        if (activeTab === 'bookings' && bookings.length === 0) {
+          await fetchBookings()
+        }
+
+        if (activeTab === 'support' && supportRequests.length === 0) {
+          await fetchSupportRequests()
+        }
       } catch (err) {
         if (!isMounted) return
-        showToast(err.response?.data?.message || 'Failed to load support requests', 'danger')
+        const message = err.response?.data?.message || `Failed to load admin ${activeTab}`
+        setError(message)
+        showToast(message, 'danger')
       }
     }
 
-    fetchSupportRequests()
+    loadActiveTab()
 
     return () => {
       isMounted = false
     }
-  }, [activeTab, adminRequestConfig, showToast, user?.isAdmin])
+  }, [activeTab, bookings.length, fetchBookings, fetchRides, fetchSupportRequests, fetchUsers, rides.length, showToast, supportRequests.length, user?.isAdmin, users.length])
 
   if (!user) return null
   if (!user.isAdmin) return <Navigate to="/dashboard" replace />
@@ -152,7 +185,7 @@ const AdminPage = () => {
         adminRequestConfig
       )
       showToast('Admin access updated', 'success')
-      fetchAdminData()
+      await Promise.all([fetchOverview(), fetchUsers()])
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to update admin access', 'danger')
     }
@@ -172,7 +205,7 @@ const AdminPage = () => {
     try {
       await axios.delete(`/api/admin/users/${targetUser.id}`, adminRequestConfig)
       showToast('User deleted', 'success')
-      fetchAdminData()
+      await Promise.all([fetchOverview(), fetchUsers()])
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to delete user', 'danger')
     }
@@ -192,7 +225,7 @@ const AdminPage = () => {
     try {
       await axios.patch(`/api/admin/rides/${ride.id}/cancel`, {}, adminRequestConfig)
       showToast('Ride cancelled', 'success')
-      fetchAdminData()
+      await Promise.all([fetchOverview(), fetchRides()])
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to cancel ride', 'danger')
     }
@@ -212,7 +245,7 @@ const AdminPage = () => {
     try {
       await axios.patch(`/api/admin/bookings/${booking.id}/cancel`, {}, adminRequestConfig)
       showToast('Booking cancelled', 'success')
-      fetchAdminData()
+      await Promise.all([fetchOverview(), fetchBookings()])
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to cancel booking', 'danger')
     }
@@ -242,54 +275,32 @@ const AdminPage = () => {
         adminRequestConfig
       )
       showToast('Support request updated', 'success')
-      fetchAdminData()
+      await fetchOverview()
       if (activeTab === 'support') {
-        const response = await axios.get('/api/admin/support', adminRequestConfig)
-        setSupportRequests(response.data.requests || [])
+        await fetchSupportRequests()
       }
-      window.dispatchEvent(new Event('support-badge-refresh'))
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to update support request', 'danger')
     }
   }
 
   const rideStatusItems = [
-    { label: 'Active', value: rides.filter((ride) => ride.status === 'active').length, color: 'bg-emerald-500' },
-    { label: 'Completed', value: rides.filter((ride) => ride.status === 'completed').length, color: 'bg-blue-500' },
-    { label: 'Cancelled', value: rides.filter((ride) => ride.status === 'cancelled').length, color: 'bg-rose-500' },
+    { label: 'Active', value: insights?.rideStatusCounts?.active || 0, color: 'bg-emerald-500' },
+    { label: 'Completed', value: insights?.rideStatusCounts?.completed || 0, color: 'bg-blue-500' },
+    { label: 'Cancelled', value: insights?.rideStatusCounts?.cancelled || 0, color: 'bg-rose-500' },
   ]
 
   const bookingStatusItems = [
-    { label: 'Confirmed', value: bookings.filter((booking) => booking.status === 'confirmed').length, color: 'bg-emerald-500' },
-    { label: 'Completed', value: bookings.filter((booking) => booking.status === 'completed').length, color: 'bg-blue-500' },
-    { label: 'Cancelled', value: bookings.filter((booking) => booking.status === 'cancelled').length, color: 'bg-rose-500' },
+    { label: 'Confirmed', value: insights?.bookingStatusCounts?.confirmed || 0, color: 'bg-emerald-500' },
+    { label: 'Completed', value: insights?.bookingStatusCounts?.completed || 0, color: 'bg-blue-500' },
+    { label: 'Cancelled', value: insights?.bookingStatusCounts?.cancelled || 0, color: 'bg-rose-500' },
   ]
 
-  const recentRidePoints = Array.from({ length: 7 }, (_, index) => {
-    const current = new Date()
-    current.setDate(current.getDate() - (6 - index))
-    const key = current.toDateString()
-    const count = rides.filter((ride) => new Date(ride.createdAt).toDateString() === key).length
+  const recentRidePoints = insights?.recentRides || []
+  const recentBookingPoints = insights?.recentBookings || []
 
-    return {
-      label: current.toLocaleDateString('en-IN', { weekday: 'short' }),
-      value: count,
-    }
-  })
-
-  const recentBookingPoints = Array.from({ length: 7 }, (_, index) => {
-    const current = new Date()
-    current.setDate(current.getDate() - (6 - index))
-    const key = current.toDateString()
-    const count = bookings.filter((booking) => new Date(booking.createdAt).toDateString() === key).length
-
-    return {
-      label: current.toLocaleDateString('en-IN', { weekday: 'short' }),
-      value: count,
-    }
-  })
-
-  const totalPlatformFare = rides.reduce((sum, ride) => sum + Number(ride.pricePerSeat || 0), 0)
+  const averageFare = insights?.averageFare || 0
+  const adminUsers = insights?.adminUsers || 0
 
   return (
     <div className="container-main py-8 space-y-8">
@@ -343,18 +354,18 @@ const AdminPage = () => {
               <div className="mt-6 space-y-5">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Admin Users</p>
-                  <p className="mt-1 text-2xl font-bold text-slate-900">{users.filter((entry) => entry.isAdmin).length}</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-900">{adminUsers}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Average Fare</p>
                   <p className="mt-1 text-2xl font-bold text-slate-900">
-                    {rides.length ? formatINR(totalPlatformFare / rides.length) : formatINR(0)}
+                    {formatINR(averageFare)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Completed Booking Ratio</p>
                   <p className="mt-1 text-2xl font-bold text-slate-900">
-                    {bookings.length ? `${Math.round((bookingStatusItems[1].value / bookings.length) * 100)}%` : '0%'}
+                    {overview?.bookings ? `${Math.round((bookingStatusItems[1].value / overview.bookings) * 100)}%` : '0%'}
                   </p>
                 </div>
               </div>
