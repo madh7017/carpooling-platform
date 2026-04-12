@@ -36,6 +36,40 @@ const configuredOrigins = (process.env.CORS_ORIGIN || '')
 const allowedOrigins = configuredOrigins.length ? configuredOrigins : defaultLocalOrigins;
 const isDevelopment = (process.env.NODE_ENV || 'development') !== 'production';
 
+const isAllowedConfiguredOrigin = (origin = '') => {
+  if (!origin) return true;
+
+  return allowedOrigins.some((allowedOrigin) => {
+    if (allowedOrigin === origin) {
+      return true;
+    }
+
+    if (!allowedOrigin.includes('*')) {
+      return false;
+    }
+
+    const escapedPattern = allowedOrigin
+      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*/g, '.*');
+
+    return new RegExp(`^${escapedPattern}$`, 'i').test(origin);
+  });
+};
+
+const isTrustedDeploymentOrigin = (origin = '') => {
+  try {
+    const { hostname, protocol } = new URL(origin);
+
+    if (protocol !== 'https:') {
+      return false;
+    }
+
+    return hostname.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
+};
+
 const isNgrokOrigin = (origin = '') => {
   try {
     const { hostname } = new URL(origin);
@@ -77,7 +111,7 @@ const isPrivateNetworkOrigin = (origin = '') => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || isAllowedConfiguredOrigin(origin)) {
         return callback(null, true);
       }
 
@@ -86,6 +120,10 @@ app.use(
       }
 
       if (isDevelopment && isPrivateNetworkOrigin(origin)) {
+        return callback(null, true);
+      }
+
+      if (isTrustedDeploymentOrigin(origin)) {
         return callback(null, true);
       }
 
