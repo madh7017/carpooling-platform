@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+
 const FloatingChatBox = ({
   isOpen,
   title,
@@ -9,9 +12,15 @@ const FloatingChatBox = ({
   onSend,
   onClose,
 }) => {
-  if (!isOpen) return null
+  const [mounted, setMounted] = useState(false)
 
-  return (
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!isOpen || !mounted) return null
+
+  return createPortal(
     <div className="fixed bottom-4 right-4 z-40 w-[calc(100vw-2rem)] max-w-sm rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-300/40 animate-slide-up sm:bottom-6 sm:right-6">
       <div className="rounded-t-3xl bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 px-4 py-4 text-white">
         <div className="flex items-start justify-between gap-3">
@@ -84,6 +93,8 @@ const FloatingChatBox = ({
         </div>
       </div>
     </div>
+    ,
+    document.body
   )
 }
 
