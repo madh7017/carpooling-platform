@@ -216,6 +216,8 @@ const RideDetail = () => {
             <div className="rounded-xl border border-slate-200 p-4 space-y-2">
               <p><strong>Name:</strong> {ride.driver.name}</p>
               <p><strong>Rating:</strong> {formatRating(ride.driver?.rating, 'No ratings yet')}</p>
+              <p><strong>Driving Licence Number:</strong> {ride.driver?.drivingLicenseNumber || 'Not provided'}</p>
+              <p><strong>Vehicle Registration Number:</strong> {ride.driver?.vehicleRegistrationNumber || 'Not provided'}</p>
               <p><strong>Contact:</strong> Phone number is kept private until booking.</p>
             </div>
           </div>

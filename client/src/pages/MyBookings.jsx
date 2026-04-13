@@ -17,6 +17,21 @@ const MyBookings = () => {
   const [activeChat, setActiveChat] = useState(null)
   const [messagesByBooking, setMessagesByBooking] = useState({})
   const [messageDraft, setMessageDraft] = useState('')
+  const [activeRatingBookingId, setActiveRatingBookingId] = useState(null)
+  const [dismissedRatingBookingIds, setDismissedRatingBookingIds] = useState([])
+
+  const maybeOpenRatingPopup = useCallback((bookingList) => {
+    const nextBookingToRate = bookingList.find(
+      (booking) =>
+        booking.status === 'completed' &&
+        !booking.rated &&
+        !dismissedRatingBookingIds.includes(booking._id)
+    )
+
+    if (nextBookingToRate) {
+      setActiveRatingBookingId((current) => current || nextBookingToRate._id)
+    }
+  }, [dismissedRatingBookingIds])
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -26,12 +41,13 @@ const MyBookings = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       })
       setBookings(response.data.bookings)
+      maybeOpenRatingPopup(response.data.bookings)
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch bookings')
     } finally {
       setLoading(false)
     }
-  }, [filter])
+  }, [filter, maybeOpenRatingPopup])
 
   useEffect(() => {
     fetchBookings()
@@ -62,15 +78,21 @@ const MyBookings = () => {
     })
     source.addEventListener('ride_update', (event) => {
       const payload = JSON.parse(event.data)
-      setBookings((prev) =>
-        prev.map((booking) =>
+      setBookings((prev) => {
+        const updatedBookings = prev.map((booking) =>
           booking.ride?._id === payload.rideId ? { ...booking, status: payload.status } : booking
         )
-      )
+
+        if (payload.status === 'completed') {
+          maybeOpenRatingPopup(updatedBookings)
+        }
+
+        return updatedBookings
+      })
     })
 
     return () => source.close()
-  }, [])
+  }, [maybeOpenRatingPopup])
 
   const handleCancelBooking = async (bookingId) => {
     const confirmed = await confirmAction('Are you sure you want to cancel this booking?', {
@@ -101,6 +123,7 @@ const MyBookings = () => {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       )
       showToast('Rating submitted successfully', 'success')
+      setActiveRatingBookingId(null)
       fetchBookings()
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to submit rating', 'danger')
@@ -170,6 +193,14 @@ const MyBookings = () => {
   }
 
   const activeBooking = bookings.find((booking) => booking._id === activeChat)
+  const activeRatingBooking = bookings.find((booking) => booking._id === activeRatingBookingId)
+
+  const handleCloseRatingModal = (bookingId) => {
+    if (bookingId) {
+      setDismissedRatingBookingIds((prev) => (prev.includes(bookingId) ? prev : [...prev, bookingId]))
+    }
+    setActiveRatingBookingId(null)
+  }
 
   if (loading) return <Loading />
 
@@ -248,7 +279,11 @@ const MyBookings = () => {
                   <button onClick={() => openChat(booking._id)} className="btn-secondary">
                     Chat
                   </button>
-                  {booking.status === 'completed' && !booking.rated && <RatingModal booking={booking} onRate={handleRateDriver} />}
+                  {booking.status === 'completed' && !booking.rated && (
+                    <button onClick={() => setActiveRatingBookingId(booking._id)} className="btn-primary">
+                      Rate Driver
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -274,32 +309,41 @@ const MyBookings = () => {
           setMessageDraft('')
         }}
       />
+
+      <RatingModal
+        booking={activeRatingBooking}
+        isOpen={Boolean(activeRatingBooking)}
+        onRate={handleRateDriver}
+        onClose={() => handleCloseRatingModal(activeRatingBooking?._id)}
+      />
     </div>
   )
 }
 
-const RatingModal = ({ booking, onRate }) => {
-  const [showModal, setShowModal] = useState(false)
+const RatingModal = ({ booking, isOpen, onRate, onClose }) => {
   const [rating, setRating] = useState(5)
   const [review, setReview] = useState('')
 
+  useEffect(() => {
+    if (!isOpen) return
+
+    setRating(5)
+    setReview('')
+  }, [isOpen, booking?._id])
+
   const handleSubmit = () => {
     onRate(booking._id, rating, review)
-    setShowModal(false)
   }
 
-  if (!showModal) {
-    return (
-      <button onClick={() => setShowModal(true)} className="btn-primary">
-        Rate Driver
-      </button>
-    )
-  }
+  if (!isOpen || !booking) return null
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg p-6 max-w-md w-full animate-slide-up">
         <h3 className="heading-4 mb-4">Rate Your Driver</h3>
+        <p className="mb-4 text-sm text-slate-600">
+          {booking.ride?.from} to {booking.ride?.to}
+        </p>
 
         <div className="mb-4">
           <label className="label">Rating</label>
@@ -326,7 +370,7 @@ const RatingModal = ({ booking, onRate }) => {
           <button onClick={handleSubmit} className="btn-primary flex-1">
             Submit
           </button>
-          <button onClick={() => setShowModal(false)} className="btn-secondary flex-1">
+          <button onClick={onClose} className="btn-secondary flex-1">
             Cancel
           </button>
         </div>

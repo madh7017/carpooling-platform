@@ -188,6 +188,11 @@ const Dashboard = () => {
                       {booking.status}
                     </span>
                   </div>
+                  <div className="mt-4">
+                    <Link to="/my-bookings" className="btn-outline btn-sm">
+                      Manage Booking
+                    </Link>
+                  </div>
                 </article>
               ))}
             </div>

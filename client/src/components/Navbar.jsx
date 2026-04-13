@@ -98,7 +98,6 @@ const Navbar = () => {
                 <NavLink to="/dashboard">Dashboard</NavLink>
                 {user.isAdmin && <NavLink to="/admin" badgeCount={openSupportCount}>Admin</NavLink>}
                 {!user.isAdmin && <NavLink to="/search-rides">Find Rides</NavLink>}
-                {!user.isAdmin && <NavLink to="/my-bookings">My Bookings</NavLink>}
                 {!user.isAdmin && <NavLink to="/support">Support</NavLink>}
                 <NotificationBell />
                 <div className="ml-2 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5">
@@ -141,7 +140,6 @@ const Navbar = () => {
                 <NavLink to="/dashboard" onClick={() => setIsMenuOpen(false)}>Dashboard</NavLink>
                 {user.isAdmin && <NavLink to="/admin" onClick={() => setIsMenuOpen(false)} badgeCount={openSupportCount}>Admin</NavLink>}
                 {!user.isAdmin && <NavLink to="/search-rides" onClick={() => setIsMenuOpen(false)}>Find Rides</NavLink>}
-                {!user.isAdmin && <NavLink to="/my-bookings" onClick={() => setIsMenuOpen(false)}>My Bookings</NavLink>}
                 {!user.isAdmin && <NavLink to="/support" onClick={() => setIsMenuOpen(false)}>Support</NavLink>}
                 <div className="px-1 py-2">
                   <NotificationBell onNavigate={() => setIsMenuOpen(false)} />

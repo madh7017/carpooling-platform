@@ -226,7 +226,11 @@ exports.getRides = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
 
   const [rides, total] = await Promise.all([
-    Ride.find(query).populate("driver", "name rating").sort(sortConfig).skip(skip).limit(Number(limit)),
+    Ride.find(query)
+      .populate("driver", "name rating drivingLicenseNumber vehicleRegistrationNumber")
+      .sort(sortConfig)
+      .skip(skip)
+      .limit(Number(limit)),
     Ride.countDocuments(query),
   ]);
 
@@ -252,7 +256,10 @@ exports.getRides = asyncHandler(async (req, res) => {
 });
 
 exports.getRideById = asyncHandler(async (req, res) => {
-  const ride = await Ride.findById(req.params.id).populate("driver", "name rating");
+  const ride = await Ride.findById(req.params.id).populate(
+    "driver",
+    "name rating drivingLicenseNumber vehicleRegistrationNumber"
+  );
   if (!ride) {
     return res.status(404).json({ message: "Ride not found" });
   }
